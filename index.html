@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15245d" />
+    <meta name="description" content="משחק חשבון אינסופי לתרגול חיבור וחיסור עד 10" />
+    <title>חשבון עד 10 | משחק חיבור וחיסור</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <div class="orbit orbit-one" aria-hidden="true"></div>
+      <div class="orbit orbit-two" aria-hidden="true"></div>
+      <section class="game-wrap" aria-label="משחק חשבון עד 10">
+        <header class="topbar">
+          <div class="brand">
+            <span class="brand-icon" aria-hidden="true">🚀</span>
+            <div><p>מסע בחלל המספרים</p><h1>חשבון עד 10</h1></div>
+          </div>
+          <div class="header-actions">
+            <div class="score-chip" aria-label="ניקוד"><span class="star" aria-hidden="true">★</span><strong id="score">0</strong><small>נקודות</small></div>
+            <button id="reset-button" class="reset-button" type="button" aria-label="התחלה מחדש" title="התחלה מחדש">↻</button>
+          </div>
+        </header>
+
+        <div class="mode-picker" role="radiogroup" aria-label="בחירת סוג תרגילים">
+          <button class="mode-option selected" type="button" data-mode="mixed" role="radio" aria-checked="true"><span aria-hidden="true">▦</span> הכול ביחד</button>
+          <button class="mode-option" type="button" data-mode="addition" role="radio" aria-checked="false"><span aria-hidden="true">＋</span> רק חיבור</button>
+          <button class="mode-option" type="button" data-mode="subtraction" role="radio" aria-checked="false"><span aria-hidden="true">−</span> רק חיסור</button>
+        </div>
+
+        <section class="question-card">
+          <div class="mission-row">
+            <div class="mission-label"><span id="question-number">שאלה 1</span><small>∞ אפשר להמשיך כמה שרוצים</small></div>
+            <div class="stats-row"><div class="stat-pill">✦ רצף <span id="streak">0</span></div><div class="stat-pill stars-pill">★ <span id="stars">0</span></div></div>
+          </div>
+
+          <div class="milestone">
+            <span id="milestone-label">עוד 10 תשובות לכוכב הבא</span>
+            <div class="game-progress" role="progressbar" aria-label="התקדמות לכוכב הבא" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
+          </div>
+
+          <div class="question-area">
+            <button id="listen-button" class="listen-button" type="button" aria-label="הקראת התרגיל" title="הקראת התרגיל">🔊</button>
+            <p class="question-prompt">כמה זה?</p>
+            <div class="equation" dir="ltr" id="equation" aria-live="polite">
+              <span id="first-number">4</span><span class="operator" id="operator">+</span><span id="second-number">3</span><span class="equals">=</span><span class="answer-blank" id="answer-box">?</span>
+            </div>
+            <p id="speech-notice" class="speech-notice" role="status" hidden></p>
+          </div>
+
+          <div id="answers" class="answers" aria-label="אפשרויות תשובה"></div>
+          <div class="feedback" aria-live="polite"><p id="feedback">בוחרים את התשובה הנכונה</p></div>
+          <button id="next-button" class="next-button" type="button" hidden>לשאלה הבאה <span aria-hidden="true">←</span></button>
+
+          <div class="number-line-wrap">
+            <p>אפשר להיעזר בקו המספרים</p>
+            <div id="number-line" class="number-line" dir="ltr" aria-label="קו מספרים מאפס עד עשר"></div>
+          </div>
+        </section>
+        <p class="parent-note">מתאים לתרגול חיבור וחיסור בכיתות א׳ עד ב׳</p>
+      </section>
+    </main>
+    <script src="./script.js"></script>
+  </body>
+</html>
