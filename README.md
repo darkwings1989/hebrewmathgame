@@ -1,18 +1,4 @@
 # חשבון עד 100
 
 משחק דפדפן אינסופי בעברית לתרגול חיבור וחיסור עד 100.
-
-## פרסום ב-GitHub Pages
-
-1. יוצרים מאגר ציבורי חדש ב-GitHub.
-2. מעלים לתיקייה הראשית של המאגר את כל הקבצים שבחבילה.
-3. פותחים `Settings`, ואז `Pages`.
-4. תחת `Build and deployment`, בוחרים ב-`Deploy from a branch`.
-5. בוחרים בענף `main`, בתיקייה `/(root)`, ולוחצים `Save`.
-6. לאחר מספר דקות הקישור לאתר יופיע באותו מסך.
-
-כתובת האתר תהיה בדרך כלל:
-
-`https://USERNAME.github.io/heshbon-ad-10/`
-
-יש להחליף את `USERNAME` בשם המשתמש שלך ב-GitHub.
+הכתובת:https://darkwings1989.github.io/hebrewmathgame/ 
