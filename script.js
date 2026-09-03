@@ -1,7 +1,7 @@
 "use strict";
 
 const MAX_NUMBER = 100;
-const GAME_VERSION = "100.3";
+const GAME_VERSION = "100.4";
 const hebrewOnes = ["אפס", "אחת", "שתיים", "שלוש", "ארבע", "חמש", "שש", "שבע", "שמונה", "תשע"];
 const hebrewTeens = ["עשר", "אחת עשרה", "שתים עשרה", "שלוש עשרה", "ארבע עשרה", "חמש עשרה", "שש עשרה", "שבע עשרה", "שמונה עשרה", "תשע עשרה"];
 const hebrewTens = ["", "", "עשרים", "שלושים", "ארבעים", "חמישים", "שישים", "שבעים", "שמונים", "תשעים"];
@@ -33,6 +33,7 @@ const elements = {
   feedback: document.querySelector("#feedback"),
   next: document.querySelector("#next-button"),
   numberLine: document.querySelector("#number-line"),
+  numberLineHelp: document.querySelector("#number-line-help"),
   speechNotice: document.querySelector("#speech-notice"),
 };
 
@@ -148,21 +149,45 @@ function renderAnswers() {
 
 function renderNumberLine() {
   elements.numberLine.replaceChildren();
-  for (let number = 0; number <= MAX_NUMBER; number += 10) {
+  const track = document.createElement("div");
+  track.className = "number-line-track";
+  let startPoint;
+  let answerPoint;
+
+  for (let number = 0; number <= MAX_NUMBER; number += 1) {
     const point = document.createElement("span");
     point.textContent = String(number);
-    if (state.isComplete && number === state.question.answer) point.className = "number-active";
-    elements.numberLine.append(point);
-  }
+    point.setAttribute("aria-label", `מספר ${number}`);
 
-  if (state.isComplete && state.question.answer % 10 !== 0) {
-    const marker = document.createElement("span");
-    marker.className = "number-answer-marker";
-    marker.textContent = String(state.question.answer);
-    marker.style.left = `${Math.max(5, Math.min(95, state.question.answer))}%`;
-    marker.setAttribute("aria-label", `התשובה ${state.question.answer}`);
-    elements.numberLine.append(marker);
+    if (number === state.question.first) {
+      point.classList.add("number-start");
+      point.setAttribute("aria-label", `נקודת ההתחלה ${number}`);
+      startPoint = point;
+    }
+
+    if (state.isComplete && number === state.question.answer) {
+      point.classList.add("number-active");
+      point.setAttribute("aria-label", `התשובה ${number}`);
+      answerPoint = point;
+    }
+
+    track.append(point);
   }
+  elements.numberLine.append(track);
+
+  const direction = state.question.operation === "addition" ? "ימינה" : "שמאלה";
+  elements.numberLineHelp.textContent = state.question.second === 0
+    ? `מתחילים ב־${state.question.first} ונשארים במקום`
+    : `מתחילים ב־${state.question.first} וסופרים ${state.question.second} צעדים ${direction}`;
+  elements.numberLine.setAttribute("aria-label", elements.numberLineHelp.textContent);
+
+  window.requestAnimationFrame(() => {
+    const focusPoint = state.isComplete ? answerPoint : startPoint;
+    if (!focusPoint) return;
+    const target = focusPoint.offsetLeft - (elements.numberLine.clientWidth - focusPoint.offsetWidth) / 2;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    elements.numberLine.scrollTo({ left: target, behavior: reduceMotion ? "auto" : "smooth" });
+  });
 }
 
 function render() {
