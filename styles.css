@@ -1,4 +1,4 @@
-:root { --ink:#14204d; --purple:#6547e8; }
+:root { --game-css-version:100.5; --ink:#14204d; --purple:#6547e8; }
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }
 body { margin:0; color:var(--ink); background:#0b1740; font-family:"Arial Rounded MT Bold","Rubik",Arial,sans-serif; }

@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#15245d" />
     <meta name="description" content="משחק חשבון אינסופי לתרגול חיבור וחיסור עד 100" />
-    <meta name="game-version" content="100.4" />
+    <meta name="game-version" content="100.5" />
     <title>חשבון עד 100 | משחק חיבור וחיסור</title>
-    <link rel="stylesheet" href="./styles.css?v=4" />
+    <link id="game-stylesheet" rel="stylesheet" />
+    <script>
+      document.querySelector("#game-stylesheet").href = `./styles.css?v=${Date.now()}`;
+    </script>
   </head>
   <body>
     <main class="game-shell">
@@ -63,6 +66,10 @@
         <p class="parent-note">מתאים לתרגול חיבור וחיסור עד 100</p>
       </section>
     </main>
-    <script src="./script.js?v=4"></script>
+    <script>
+      const gameScript = document.createElement("script");
+      gameScript.src = `./script.js?v=${Date.now()}`;
+      document.body.append(gameScript);
+    </script>
   </body>
 </html>
