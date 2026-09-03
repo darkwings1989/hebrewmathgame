@@ -273,6 +273,7 @@ function waitForHebrewVoice(synth, timeoutMs = SPEECH_VOICE_WAIT_MS) {
 function speechErrorMessage(errorCode) {
   if (errorCode === "not-allowed") return "הדפדפן חסם את ההקראה. יש ללחוץ שוב על כפתור הקול";
   if (errorCode === "audio-busy" || errorCode === "audio-hardware") return "לא ניתן להשתמש כרגע ברמקול של המכשיר";
+  if (errorCode === "language-unavailable" || errorCode === "voice-unavailable") return "לא נמצא קול עברי זמין בדפדפן הזה";
   return "לא ניתן להפעיל הקראה בעברית במכשיר הזה";
 }
 
@@ -320,8 +321,12 @@ function speakQuestion(synth, voice, requestId, canRetry) {
   synth.speak(speech);
 
   window.setTimeout(() => {
-    if (requestId !== speechRequestId || speechStarted || speechFinished || synth.speaking || synth.pending) return;
-    showSpeechNotice("לא התקבלה תגובה ממנוע ההקראה במכשיר הזה");
+    if (requestId !== speechRequestId || speechStarted || speechFinished) return;
+    speechFinished = true;
+    synth.cancel();
+    showSpeechNotice(voice
+      ? "לא התקבלה תגובה ממנוע ההקראה במכשיר הזה"
+      : "לא נמצא קול עברי זמין בדפדפן הזה");
   }, 5000);
 }
 
@@ -337,7 +342,8 @@ function readQuestion() {
 
   synth.cancel();
   if (synth.paused) synth.resume();
-  elements.speechNotice.hidden = true;
+  if (voice) elements.speechNotice.hidden = true;
+  else showSpeechNotice("מנסה להפעיל קול עברי...");
 
   // If the browser does not expose a Hebrew voice, leave voice unset and let
   // the speech engine choose its default Hebrew voice from speech.lang.
@@ -378,4 +384,5 @@ if ("speechSynthesis" in window) {
   refreshAvailableVoices();
   window.speechSynthesis.addEventListener("voiceschanged", refreshAvailableVoices);
 }
+state.question = createQuestion();
 render();
