@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#15245d" />
     <meta name="description" content="משחק חשבון אינסופי לתרגול חיבור וחיסור עד 100" />
+    <meta name="game-version" content="100.3" />
     <title>חשבון עד 100 | משחק חיבור וחיסור</title>
-    <link id="game-stylesheet" rel="stylesheet" />
-    <script>
-      document.querySelector("#game-stylesheet").href = `./styles.css?v=${Date.now()}`;
-    </script>
+    <link rel="stylesheet" href="./styles.css?v=3" />
   </head>
   <body>
     <main class="game-shell">
@@ -48,7 +46,7 @@
             <button id="listen-button" class="listen-button" type="button" aria-label="הקראת התרגיל" title="הקראת התרגיל">🔊</button>
             <p class="question-prompt">כמה זה?</p>
             <div class="equation" dir="ltr" id="equation" aria-live="polite">
-              <span id="first-number">4</span><span class="operator" id="operator">+</span><span id="second-number">3</span><span class="equals">=</span><span class="answer-blank" id="answer-box">?</span>
+              <span id="first-number">48</span><span class="operator" id="operator">+</span><span id="second-number">27</span><span class="equals">=</span><span class="answer-blank" id="answer-box">?</span>
             </div>
             <p id="speech-notice" class="speech-notice" role="status" hidden></p>
           </div>
@@ -65,10 +63,6 @@
         <p class="parent-note">מתאים לתרגול חיבור וחיסור עד 100</p>
       </section>
     </main>
-    <script>
-      const gameScript = document.createElement("script");
-      gameScript.src = `./script.js?v=${Date.now()}`;
-      document.body.append(gameScript);
-    </script>
+    <script src="./script.js?v=3"></script>
   </body>
 </html>

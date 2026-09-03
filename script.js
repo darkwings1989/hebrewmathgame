@@ -1,12 +1,13 @@
 "use strict";
 
 const MAX_NUMBER = 100;
+const GAME_VERSION = "100.3";
 const hebrewOnes = ["אפס", "אחת", "שתיים", "שלוש", "ארבע", "חמש", "שש", "שבע", "שמונה", "תשע"];
 const hebrewTeens = ["עשר", "אחת עשרה", "שתים עשרה", "שלוש עשרה", "ארבע עשרה", "חמש עשרה", "שש עשרה", "שבע עשרה", "שמונה עשרה", "תשע עשרה"];
 const hebrewTens = ["", "", "עשרים", "שלושים", "ארבעים", "חמישים", "שישים", "שבעים", "שמונים", "תשעים"];
 const state = {
   mode: "mixed",
-  question: { first: 4, second: 3, operation: "addition", answer: 7, choices: [6, 7, 8, 5] },
+  question: { first: 48, second: 27, operation: "addition", answer: 75, choices: [75, 65, 74, 85] },
   questionNumber: 1,
   score: 0,
   streak: 0,
@@ -34,6 +35,8 @@ const elements = {
   numberLine: document.querySelector("#number-line"),
   speechNotice: document.querySelector("#speech-notice"),
 };
+
+document.documentElement.dataset.gameVersion = GAME_VERSION;
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
