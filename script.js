@@ -1,7 +1,8 @@
 "use strict";
 
 const MAX_NUMBER = 100;
-const GAME_VERSION = "100.4";
+const GAME_VERSION = "100.6";
+const SPEECH_VOICE_WAIT_MS = 4000;
 const hebrewOnes = ["אפס", "אחת", "שתיים", "שלוש", "ארבע", "חמש", "שש", "שבע", "שמונה", "תשע"];
 const hebrewTeens = ["עשר", "אחת עשרה", "שתים עשרה", "שלוש עשרה", "ארבע עשרה", "חמש עשרה", "שש עשרה", "שבע עשרה", "שמונה עשרה", "תשע עשרה"];
 const hebrewTens = ["", "", "עשרים", "שלושים", "ארבעים", "חמישים", "שישים", "שבעים", "שמונים", "תשעים"];
@@ -16,6 +17,9 @@ const state = {
   isComplete: false,
   answeredCorrectly: false,
 };
+
+let availableVoices = [];
+let speechRequestId = 0;
 
 const elements = {
   score: document.querySelector("#score"),
@@ -224,43 +228,120 @@ function render() {
   renderNumberLine();
 }
 
+function refreshAvailableVoices() {
+  if (!("speechSynthesis" in window)) return [];
+  availableVoices = window.speechSynthesis.getVoices();
+  return availableVoices;
+}
+
+function findHebrewVoice(voices = availableVoices) {
+  return voices.find((voice) => {
+    const language = String(voice.lang || "").toLowerCase();
+    return language === "he" || language.startsWith("he-") || /hebrew|עברית/i.test(voice.name || "");
+  }) || null;
+}
+
+function waitForHebrewVoice(synth, timeoutMs = SPEECH_VOICE_WAIT_MS) {
+  const currentVoice = findHebrewVoice(refreshAvailableVoices());
+  if (currentVoice) return Promise.resolve(currentVoice);
+
+  return new Promise((resolve) => {
+    let finished = false;
+    let timeoutId;
+    let pollId;
+
+    const finish = (voice) => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timeoutId);
+      window.clearInterval(pollId);
+      synth.removeEventListener("voiceschanged", checkForVoice);
+      resolve(voice);
+    };
+
+    const checkForVoice = () => {
+      const voice = findHebrewVoice(refreshAvailableVoices());
+      if (voice) finish(voice);
+    };
+
+    synth.addEventListener("voiceschanged", checkForVoice);
+    pollId = window.setInterval(checkForVoice, 250);
+    timeoutId = window.setTimeout(() => finish(findHebrewVoice(refreshAvailableVoices())), timeoutMs);
+  });
+}
+
+function speechErrorMessage(errorCode) {
+  if (errorCode === "not-allowed") return "הדפדפן חסם את ההקראה. יש ללחוץ שוב על כפתור הקול";
+  if (errorCode === "audio-busy" || errorCode === "audio-hardware") return "לא ניתן להשתמש כרגע ברמקול של המכשיר";
+  return "לא ניתן להפעיל הקראה בעברית במכשיר הזה";
+}
+
+function speakQuestion(synth, voice, requestId, canRetry) {
+  if (requestId !== speechRequestId) return;
+
+  const operation = state.question.operation === "addition" ? "פלוס" : "מינוס";
+  const speech = new SpeechSynthesisUtterance(`כמה זה ${numberToHebrew(state.question.first)} ${operation} ${numberToHebrew(state.question.second)}?`);
+  let speechFinished = false;
+  let speechStarted = false;
+
+  speech.lang = "he-IL";
+  if (voice) speech.voice = voice;
+  speech.rate = 0.65;
+  speech.pitch = 1;
+
+  speech.onstart = () => {
+    if (requestId !== speechRequestId) return;
+    speechStarted = true;
+    elements.speechNotice.hidden = true;
+  };
+
+  speech.onend = () => {
+    speechFinished = true;
+  };
+
+  speech.onerror = async (event) => {
+    speechFinished = true;
+    if (requestId !== speechRequestId || event.error === "canceled" || event.error === "interrupted") return;
+
+    const shouldRetry = canRetry && !voice && ["language-unavailable", "voice-unavailable", "synthesis-unavailable"].includes(event.error);
+    if (shouldRetry) {
+      showSpeechNotice("טוען קול עברי...");
+      const loadedVoice = await waitForHebrewVoice(synth);
+      if (requestId !== speechRequestId) return;
+      if (loadedVoice) {
+        speakQuestion(synth, loadedVoice, requestId, false);
+        return;
+      }
+    }
+
+    showSpeechNotice(speechErrorMessage(event.error));
+  };
+
+  synth.speak(speech);
+
+  window.setTimeout(() => {
+    if (requestId !== speechRequestId || speechStarted || speechFinished || synth.speaking || synth.pending) return;
+    showSpeechNotice("לא התקבלה תגובה ממנוע ההקראה במכשיר הזה");
+  }, 5000);
+}
+
 function readQuestion() {
-  if (!("speechSynthesis" in window)) {
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
     showSpeechNotice("הקראה אינה זמינה במכשיר הזה");
     return;
   }
+
   const synth = window.speechSynthesis;
+  const requestId = ++speechRequestId;
+  const voice = findHebrewVoice(refreshAvailableVoices());
+
   synth.cancel();
+  if (synth.paused) synth.resume();
+  elements.speechNotice.hidden = true;
 
-  const speak = () => {
-    const voice = synth.getVoices().find((item) => item.lang.toLowerCase().startsWith("he") || /hebrew|עברית/i.test(item.name));
-    if (!voice) {
-      showSpeechNotice("לא נמצא קול עברי במכשיר הזה");
-      return;
-    }
-    elements.speechNotice.hidden = true;
-    const operation = state.question.operation === "addition" ? "פלוס" : "מינוס";
-    const speech = new SpeechSynthesisUtterance(`כמה זה ${numberToHebrew(state.question.first)} ${operation} ${numberToHebrew(state.question.second)}?`);
-    speech.voice = voice;
-    speech.lang = voice.lang;
-    speech.rate = 0.65;
-    speech.pitch = 1;
-    synth.speak(speech);
-  };
-
-  if (synth.getVoices().length) {
-    speak();
-    return;
-  }
-  let finished = false;
-  const finish = () => {
-    if (finished) return;
-    finished = true;
-    synth.removeEventListener("voiceschanged", finish);
-    speak();
-  };
-  synth.addEventListener("voiceschanged", finish);
-  window.setTimeout(finish, 700);
+  // If the browser does not expose a Hebrew voice, leave voice unset and let
+  // the speech engine choose its default Hebrew voice from speech.lang.
+  speakQuestion(synth, voice, requestId, true);
 }
 
 function showSpeechNotice(message) {
@@ -293,4 +374,8 @@ document.querySelector("#reset-button").addEventListener("click", () => {
 });
 document.querySelector("#listen-button").addEventListener("click", readQuestion);
 elements.next.addEventListener("click", nextQuestion);
+if ("speechSynthesis" in window) {
+  refreshAvailableVoices();
+  window.speechSynthesis.addEventListener("voiceschanged", refreshAvailableVoices);
+}
 render();
