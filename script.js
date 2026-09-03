@@ -1,6 +1,9 @@
 "use strict";
 
-const hebrewNumbers = ["אפס", "אחד", "שתיים", "שלוש", "ארבע", "חמש", "שש", "שבע", "שמונה", "תשע", "עשר"];
+const MAX_NUMBER = 100;
+const hebrewOnes = ["אפס", "אחת", "שתיים", "שלוש", "ארבע", "חמש", "שש", "שבע", "שמונה", "תשע"];
+const hebrewTeens = ["עשר", "אחת עשרה", "שתים עשרה", "שלוש עשרה", "ארבע עשרה", "חמש עשרה", "שש עשרה", "שבע עשרה", "שמונה עשרה", "תשע עשרה"];
+const hebrewTens = ["", "", "עשרים", "שלושים", "ארבעים", "חמישים", "שישים", "שבעים", "שמונים", "תשעים"];
 const state = {
   mode: "mixed",
   question: { first: 4, second: 3, operation: "addition", answer: 7, choices: [6, 7, 8, 5] },
@@ -45,6 +48,29 @@ function shuffled(items) {
   return copy;
 }
 
+function numberToHebrew(number) {
+  if (number < 10) return hebrewOnes[number];
+  if (number < 20) return hebrewTeens[number - 10];
+  if (number === 100) return "מאה";
+
+  const tens = Math.floor(number / 10);
+  const ones = number % 10;
+  return ones === 0 ? hebrewTens[tens] : `${hebrewTens[tens]} ו${hebrewOnes[ones]}`;
+}
+
+function createChoices(answer) {
+  const choices = new Set([answer]);
+  const offsets = shuffled([-10, -5, -2, -1, 1, 2, 5, 10]);
+
+  for (const offset of offsets) {
+    choices.add(Math.max(0, Math.min(MAX_NUMBER, answer + offset)));
+    if (choices.size === 4) break;
+  }
+
+  while (choices.size < 4) choices.add(randomInt(0, MAX_NUMBER));
+  return shuffled([...choices]);
+}
+
 function createQuestion() {
   const operation = state.mode === "mixed" ? (Math.random() > 0.5 ? "addition" : "subtraction") : state.mode;
   let first;
@@ -52,21 +78,16 @@ function createQuestion() {
   let answer;
 
   if (operation === "addition") {
-    first = randomInt(0, 10);
-    second = randomInt(first === 0 ? 1 : 0, 10 - first);
+    first = randomInt(0, MAX_NUMBER);
+    second = randomInt(first === 0 ? 1 : 0, MAX_NUMBER - first);
     answer = first + second;
   } else {
-    first = randomInt(1, 10);
+    first = randomInt(1, MAX_NUMBER);
     second = randomInt(0, first);
     answer = first - second;
   }
 
-  const choices = new Set([answer]);
-  while (choices.size < 4) {
-    choices.add(Math.max(0, Math.min(10, answer + randomInt(-3, 3))));
-    if (choices.size < 4) choices.add(randomInt(0, 10));
-  }
-  return { first, second, operation, answer, choices: shuffled([...choices]) };
+  return { first, second, operation, answer, choices: createChoices(answer) };
 }
 
 function resetQuestion() {
@@ -124,11 +145,20 @@ function renderAnswers() {
 
 function renderNumberLine() {
   elements.numberLine.replaceChildren();
-  for (let number = 0; number <= 10; number += 1) {
+  for (let number = 0; number <= MAX_NUMBER; number += 10) {
     const point = document.createElement("span");
     point.textContent = String(number);
     if (state.isComplete && number === state.question.answer) point.className = "number-active";
     elements.numberLine.append(point);
+  }
+
+  if (state.isComplete && state.question.answer % 10 !== 0) {
+    const marker = document.createElement("span");
+    marker.className = "number-answer-marker";
+    marker.textContent = String(state.question.answer);
+    marker.style.left = `${Math.max(5, Math.min(95, state.question.answer))}%`;
+    marker.setAttribute("aria-label", `התשובה ${state.question.answer}`);
+    elements.numberLine.append(marker);
   }
 }
 
@@ -182,7 +212,7 @@ function readQuestion() {
     }
     elements.speechNotice.hidden = true;
     const operation = state.question.operation === "addition" ? "פלוס" : "מינוס";
-    const speech = new SpeechSynthesisUtterance(`כמה זה ${hebrewNumbers[state.question.first]} ${operation} ${hebrewNumbers[state.question.second]}?`);
+    const speech = new SpeechSynthesisUtterance(`כמה זה ${numberToHebrew(state.question.first)} ${operation} ${numberToHebrew(state.question.second)}?`);
     speech.voice = voice;
     speech.lang = voice.lang;
     speech.rate = 0.65;
